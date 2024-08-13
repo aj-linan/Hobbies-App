@@ -1,50 +1,34 @@
-# Importamos las librerías necesarias
-from fastapi import APIRouter, HTTPException
-from database import db
-from models import Event
-from schemas import EventCreate, EventResponse
-from bson import ObjectId
+from fastapi import APIRouter, HTTPException, Depends
+from app.schemas import EventCreate, EventRead, EventUpdate
+from app.services import event_service  # Servicio de eventos
+from typing import List
 
-router = APIRouter()  # Creamos un enrutador para las rutas de eventos
+router = APIRouter()
 
-# Función auxiliar para convertir ObjectId a string
-def objectid_to_str(obj_id: ObjectId) -> str:
-    return str(obj_id)
-
-# Ruta para crear un evento
-@router.post("/events/", response_model=EventResponse)
+# Ruta para crear un nuevo evento
+@router.post("/events/", response_model=EventRead)
 async def create_event(event: EventCreate):
-    # Convertimos el evento a un diccionario para insertarlo en MongoDB
-    event_dict = event.model_dump()
-    result = await db.get_collection("events").insert_one(event_dict)  # Insertamos el evento
-    event_id = result.inserted_id  # Obtenemos el ID del documento insertado
-    event_data = await db.get_collection("events").find_one({"_id": event_id})  # Obtenemos el documento insertado
-    return EventResponse(**event_data, id=objectid_to_str(event_data["_id"]))  # Retornamos la respuesta
+    new_event = await event_service.create_event(event)
+    return new_event
 
-# Ruta para leer un evento por ID
-@router.get("/events/{event_id}", response_model=EventResponse)
+# Ruta para obtener un evento por su ID
+@router.get("/events/{event_id}", response_model=EventRead)
 async def read_event(event_id: str):
-    event = await db.get_collection("events").find_one({"_id": ObjectId(event_id)})  # Buscamos el evento por ID
+    event = await event_service.get_event_by_id(event_id)
     if event is None:
-        raise HTTPException(status_code=404, detail="Event not found")  # Si no se encuentra el evento, lanzamos una excepción
-    return EventResponse(**event, id=objectid_to_str(event["_id"]))  # Retornamos el evento encontrado
+        raise HTTPException(status_code=404, detail="Event not found")
+    return event
 
-# Ruta para actualizar un evento por ID
-@router.put("/events/{event_id}", response_model=EventResponse)
-async def update_event(event_id: str, event: EventCreate):
-    updated_event = await db.get_collection("events").update_one(
-        {"_id": ObjectId(event_id)},
-        {"$set": event.model_dump()}  # Actualizamos el evento con los nuevos datos
-    )
-    if updated_event.matched_count == 0:
-        raise HTTPException(status_code=404, detail="Event not found")  # Si no se encuentra el evento, lanzamos una excepción
-    event_data = await db.get_collection("events").find_one({"_id": ObjectId(event_id)})  # Obtenemos el evento actualizado
-    return EventResponse(**event_data, id=objectid_to_str(event_data["_id"]))  # Retornamos el evento actualizado
+# Ruta para actualizar un evento por su ID
+@router.put("/events/{event_id}", response_model=EventRead)
+async def update_event(event_id: str, event: EventUpdate):
+    updated_event = await event_service.update_event(event_id, event)
+    if updated_event is None:
+        raise HTTPException(status_code=404, detail="Event not found")
+    return updated_event
 
-# Ruta para eliminar un evento por ID
-@router.delete("/events/{event_id}", response_model=dict)
-async def delete_event(event_id: str):
-    result = await db.get_collection("events").delete_one({"_id": ObjectId(event_id)})  # Eliminamos el evento por ID
-    if result.deleted_count == 0:
-        raise HTTPException(status_code=404, detail="Event not found")  # Si no se encuentra el evento, lanzamos una excepción
-    return {"status": "success", "message": "Event deleted"}  # Retornamos un mensaje de éxito
+# Ruta para obtener una lista de todos los eventos
+@router.get("/events/", response_model=List[EventRead])
+async def list_events():
+    events = await event_service.list_events()
+    return events
