@@ -7,8 +7,8 @@ from database import db
 
 # Definición del modelo de Usuario en MongoDB
 class UserModel:
-    def __init__(self, id: str, name: str, email: str, password: str):
-        self.id = id
+    def __init__(self, _id: str, name: str, email: str, password: str):
+        self._id = _id
         self.name = name
         self.email = email
         self.password = password
@@ -17,7 +17,7 @@ class UserModel:
     # Conversión a documento de MongoDB
     def to_document(self):
         return {
-            "id":self.id,
+            "_id":self._id,
             "name": self.name,
             "email": self.email,
             "password": self.password,

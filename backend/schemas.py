@@ -32,7 +32,7 @@ class UserRead(BaseModel):
 
 # Esquema para crear un usuario
 class UserCreate(BaseModel):
-    id: str = Field(default_factory=str) 
+    # id: str = Field(default_factory=str) 
     name: str
     email: str
     password: str
