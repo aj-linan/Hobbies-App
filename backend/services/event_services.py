@@ -23,7 +23,7 @@ async def get_event_by_id(event_id: str) -> EventModel:
 
 # Servicio para actualizar un evento existente
 async def update_event(event_id: str, event: EventUpdate) -> EventModel:
-    event_dict = {k: v for k, v in event.dict().items() if v is not None}
+    event_dict = {k: v for k, v in event.model_dump().items() if v is not None}
     result = await db["events"].update_one(
         {"_id": ObjectId(event_id)}, {"$set": event_dict}
     )

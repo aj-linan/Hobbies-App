@@ -38,7 +38,8 @@ class UserModel:
 
 # Definición del modelo de Evento en MongoDB
 class EventModel:
-    def __init__(self, title: str, description: str, creator_id: ObjectId, date: str):
+    def __init__(self, _id: str, title: str, description: str, creator_id: ObjectId, date: str):
+        self._id = _id
         self.title = title
         self.description = description
         self.creator_id = creator_id
@@ -48,6 +49,7 @@ class EventModel:
     # Conversión a documento de MongoDB
     def to_document(self):
         return {
+            "_id":self._id,
             "title": self.title,
             "description": self.description,
             "creator_id": self.creator_id,
@@ -59,6 +61,7 @@ class EventModel:
     @classmethod
     def from_document(cls, document):
         event = cls(
+            _id=document["_id"],
             title=document["title"],
             description=document["description"],
             creator_id=document["creator_id"],
