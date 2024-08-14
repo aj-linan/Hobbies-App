@@ -1,34 +1,68 @@
-from pydantic import BaseModel, Field
-from typing import List, Optional
-from datetime import datetime
+from pymongo import MongoClient
 from bson import ObjectId
+from database import db
 
-# BaseModel: Es la clase base de Pydantic para definir modelos de datos.
-# Optional: Indica que el campo es opcional.
-# List[str]: Representa una lista de cadenas de texto (IDs de participantes).
+# El archivo models.py contiene las definiciones de los modelos que se utilizarán para interactuar con la BBDD. 
+# Los modelos definen la estructura de los documentos que se almacenan en las colecciones de MongoDB.
 
-# Definimos el modelo de datos para un evento
-class Event(BaseModel):
-    title: str  # Título del evento
-    description: Optional[str] = None  # Descripción opcional del evento
-    date: datetime  # Fecha y hora del evento
-    location: str  # Ubicación del evento
-    event_type: str  # Tipo de evento (por ejemplo, deportivo, social)
-    requirements: Optional[str] = None  # Requisitos especiales (opcional)
-    creator: str  # ID del usuario que creó el evento
-    participants: Optional[List[str]] = []  # Lista de IDs de participantes
+# Definición del modelo de Usuario en MongoDB
+class UserModel:
+    def __init__(self, id: str, name: str, email: str, password: str):
+        self.id = id
+        self.name = name
+        self.email = email
+        self.password = password
+        self.events = []  # Lista de IDs de eventos en los que el usuario participa
 
+    # Conversión a documento de MongoDB
+    def to_document(self):
+        return {
+            "id":self.id,
+            "name": self.name,
+            "email": self.email,
+            "password": self.password,
+            "events": self.events
+        }
 
-# Este es un modelo que describe la estructura de un usuario en la base de datos.
-class UserModel(BaseModel):
-    id: Optional[ObjectId] = Field(alias="_id")  # El ID es opcional porque MongoDB lo genera automáticamente
-    username: str                               # Nombre de usuario
-    email: str                                  # Correo electrónico del usuario
-    hashed_password: str                        # Contraseña encriptada
-    full_name: Optional[str] = None             # Nombre completo del usuario (opcional)
-    joined_at: datetime = Field(default_factory=datetime.now(datetime.UTC))  # Fecha en la que se unió el usuario
+    # Conversión de documento de MongoDB a objeto UserModel
+    @classmethod
+    def from_document(cls, document):
+        user = cls(
+            id=document["id"],
+            name=document["name"],
+            email=document["email"],
+            password=document["password"]
+        )
+        user.events = document.get("events", [])
+        return user
 
-    class Config:
-        allow_population_by_field_name = True
-        json_encoders = {ObjectId: str}         # Para manejar la conversión de ObjectId a string
-        arbitrary_types_allowed = True          # Permite tipos arbitrarios como ObjectId
+# Definición del modelo de Evento en MongoDB
+class EventModel:
+    def __init__(self, title: str, description: str, creator_id: ObjectId, date: str):
+        self.title = title
+        self.description = description
+        self.creator_id = creator_id
+        self.participants = []  # Lista de IDs de participantes en el evento
+        self.date = date
+
+    # Conversión a documento de MongoDB
+    def to_document(self):
+        return {
+            "title": self.title,
+            "description": self.description,
+            "creator_id": self.creator_id,
+            "participants": self.participants,
+            "date": self.date
+        }
+
+    # Conversión de documento de MongoDB a objeto EventModel
+    @classmethod
+    def from_document(cls, document):
+        event = cls(
+            title=document["title"],
+            description=document["description"],
+            creator_id=document["creator_id"],
+            date=document["date"]
+        )
+        event.participants = document.get("participants", [])
+        return event

@@ -4,9 +4,12 @@ from database import db  # Conexión a la base de datos
 from bson import ObjectId
 from typing import List
 
+# El archivo event_services.py contiene la lógica de negocio de la aplicación. 
+# Este archivo actúa como una capa de servicio que encapsula la lógica para interactuar con los modelos y esquemas.
+
 # Servicio para crear un nuevo evento
 async def create_event(event: EventCreate) -> EventModel:
-    event_dict = event.dict()
+    event_dict = event.model_dump()
     new_event = await db["events"].insert_one(event_dict)
     event_dict["_id"] = new_event.inserted_id
     return EventModel(**event_dict)
