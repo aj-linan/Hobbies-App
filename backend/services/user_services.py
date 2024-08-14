@@ -14,7 +14,9 @@ async def create_user(user: UserCreate) -> UserModel:
     user_dict["password"] = hash_password(user_dict.pop("password"))
     # Insertar el nuevo usuario en la base de datos
     new_user = await db.get_collection("users").insert_one(user_dict)
-    user_dict["id"] = new_user.inserted_id
+    user_dict["id"] = str(new_user.inserted_id)
+    user_dict.pop("_id")
+    print(user_dict)
     return UserModel(**user_dict)
 
 # Servicio para obtener un usuario por su ID

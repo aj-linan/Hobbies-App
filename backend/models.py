@@ -28,7 +28,7 @@ class UserModel:
     @classmethod
     def from_document(cls, document):
         user = cls(
-            id=document["id"],
+            _id=document["_id"],
             name=document["name"],
             email=document["email"],
             password=document["password"]
