@@ -20,10 +20,12 @@ async def create_user(user: UserCreate) -> UserModel:
     return UserModel(**user_dict)
 
 # Servicio para obtener un usuario por su ID
-async def get_user_by_id(user_id: str) -> UserModel:
+async def get_user_by_id(user_id: str) -> UserRead:
     user = await db.get_collection("users").find_one({"_id": ObjectId(user_id)})
+    user["id"] = str(user["_id"])
+    user.pop("_id")
     if user:
-        return UserModel(**user)
+        return UserRead(**user)
     return None
 
 # Servicio para actualizar un usuario existente
