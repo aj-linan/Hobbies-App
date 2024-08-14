@@ -55,7 +55,7 @@ class EventRead(BaseModel):
 class EventCreate(BaseModel):
     title: str
     description: str
-    creator_id: str  # Convertimos ObjectId a str
+    # creator_id: str  # Convertimos ObjectId a str
     date: str
 
 # Esquema para actualizar un evento

@@ -6,7 +6,13 @@ from typing import List
 router = APIRouter()
 
 # Ruta para crear un nuevo evento
-@router.post("/events/", response_model=EventRead)
+# @router.post("/events/", response_model=EventRead)
+# async def create_event(event: EventCreate):
+#     new_event = await event_services.create_event(event)
+#     return new_event
+
+
+@router.post("/users/{user_id}/create_event", response_model=EventRead)
 async def create_event(event: EventCreate):
     new_event = await event_services.create_event(event)
     return new_event
