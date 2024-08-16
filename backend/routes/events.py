@@ -6,15 +6,9 @@ from typing import List
 router = APIRouter()
 
 # Ruta para crear un nuevo evento
-# @router.post("/events/", response_model=EventRead)
-# async def create_event(event: EventCreate):
-#     new_event = await event_services.create_event(event)
-#     return new_event
-
-
 @router.post("/users/{user_id}/create_event", response_model=EventRead)
-async def create_event(event: EventCreate):
-    new_event = await event_services.create_event(event)
+async def create_event(user_id: str, event: EventCreate):
+    new_event = await event_services.create_event(user_id, event)
     return new_event
 
 # Ruta para obtener un evento por su ID
@@ -24,6 +18,15 @@ async def read_event(event_id: str):
     if event is None:
         raise HTTPException(status_code=404, detail="Event not found")
     return event
+
+# Ruta para obtener eventos por ID de su creador
+@router.get("/users/{user_id}/events/", response_model=List[EventRead])
+async def read_event(user_id: str):
+    events = await event_services.get_events_by_user_id(user_id)
+    print(events)
+    if events is None:
+        raise HTTPException(status_code=404, detail="No events created by this user")
+    return events
 
 # Ruta para actualizar un evento por su ID
 @router.put("/events/{event_id}", response_model=EventRead)
