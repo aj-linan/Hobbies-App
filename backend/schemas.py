@@ -32,7 +32,6 @@ class UserRead(BaseModel):
 
 # Esquema para crear un usuario
 class UserCreate(BaseModel):
-    # id: str = Field(default_factory=str) 
     name: str
     email: str
     password: str
@@ -63,3 +62,4 @@ class EventUpdate(BaseModel):
     title: Optional[str]
     description: Optional[str]
     date: Optional[str]
+    participants: Optional[List[str]] = Field(default_factory=list)

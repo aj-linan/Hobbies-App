@@ -55,10 +55,9 @@ async def get_events_by_user_id(user_id: str) -> List[EventModel]:
 
     return [EventModel(**event) for event in events]
     
-    
-
 # Servicio para actualizar un evento existente
 async def update_event(event_id: str, event: EventUpdate) -> EventModel:
+
     event_dict = {k: v for k, v in event.model_dump().items() if v is not None}
     result = await db.get_collection("events").update_one(
         {"_id": ObjectId(event_id)}, {"$set": event_dict}
@@ -87,3 +86,5 @@ async def list_events() -> List[EventModel]:
     events = await db.get_collection("events").aggregate(pipeline).to_list(length=100)
 
     return [EventModel(**event) for event in events]
+
+

@@ -14,8 +14,8 @@ async def create_user(user: UserCreate) -> UserModel:
     user_dict["password"] = hash_password(user_dict.pop("password"))
     # Insertar el nuevo usuario en la base de datos
     new_user = await db.get_collection("users").insert_one(user_dict)
-    user_dict["_id"] = str(new_user.inserted_id)
-    # user_dict.pop("_id")
+    user_dict["id"] = str(new_user.inserted_id)
+    user_dict.pop("_id")
     print(user_dict)
     return UserModel(**user_dict)
 
@@ -24,6 +24,7 @@ async def get_user_by_id(user_id: str) -> UserRead:
     user = await db.get_collection("users").find_one({"_id": ObjectId(user_id)})
     user["id"] = str(user["_id"])
     user.pop("_id")
+    
     if user:
         return UserRead(**user)
     return None
@@ -42,15 +43,11 @@ async def update_user(user_id: str, user: UserUpdate) -> UserModel:
 
 # Servicio para listar todos los usuarios
 async def list_users() -> List[UserRead]:
-    # users = await db.get_collection("users").find().to_list(length=100)
-    # print(users)
-    # return [UserRead(id=str(user["_id"]), name=user["name"], email=user["email"]) for user in users]
-
-
     pipeline = [
         {
             "$project": {
                 "id": {"$toString": "$_id"},
+                "_id": 0,
                 "name": 1,
                 "email": 1
             }
@@ -58,10 +55,7 @@ async def list_users() -> List[UserRead]:
     ]
     users = await db.get_collection("users").aggregate(pipeline).to_list(length=100)
     
-    # Transformación final, si es necesaria
-    user_reads = [UserRead(id=user["id"], name=user["name"], email=user["email"]) for user in users]
-    
-    return user_reads
+    return [UserRead(**user) for user in users]
 
 
 # Función auxiliar para encriptar la contraseña (simplificada)

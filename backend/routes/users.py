@@ -7,7 +7,7 @@ from typing import List
 router = APIRouter()
 
 # Ruta para crear un nuevo usuario
-@router.post("/users/", response_model=UserRead)
+@router.post("/users/", response_model=UserRead, status_code=201)
 async def create_user(user: UserCreate):
     # Crear un nuevo usuario utilizando el servicio de usuarios
     new_user = await user_services.create_user(user)
@@ -37,3 +37,4 @@ async def list_users():
     # Obtener una lista de todos los usuarios utilizando el servicio de usuarios
     users = await user_services.list_users()
     return users
+

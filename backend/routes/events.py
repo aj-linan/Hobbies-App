@@ -1,12 +1,14 @@
 from fastapi import APIRouter, HTTPException, Depends
 from schemas import EventCreate, EventRead, EventUpdate
 from services import event_services # Servicio de eventos
+from models import EventModel
 from typing import List
+from bson import ObjectId
 
 router = APIRouter()
 
 # Ruta para crear un nuevo evento
-@router.post("/users/{user_id}/create_event", response_model=EventRead)
+@router.post("/users/{user_id}/create_event", response_model=EventRead, status_code=201)
 async def create_event(user_id: str, event: EventCreate):
     new_event = await event_services.create_event(user_id, event)
     return new_event
@@ -41,3 +43,36 @@ async def update_event(event_id: str, event: EventUpdate):
 async def list_events():
     events = await event_services.list_events()
     return events
+
+# RutA para añadir a un usuario a un evento
+@router.post("/events/{eventId}/participants/{userId}", response_model = EventRead)
+async def add_user_to_event(eventId: str, userId: str):
+    # Convertir los IDs a ObjectId
+    # event_obj_id = ObjectId(eventId)
+    user_obj_id = ObjectId(userId)
+
+    # Buscar el evento
+    event = await event_services.get_event_by_id(eventId)
+    
+    if not event:
+        raise HTTPException(status_code=404, detail="Event not found")
+
+    # Verificar si el usuario ya es un participante
+    if userId in event.participants:
+        raise HTTPException(status_code=400, detail="User already added to this event")
+
+    # Añadir el ID del usuario a la lista de participantes
+    event.participants.append(userId)
+
+    print(event)
+
+    event_dict = event.to_document()
+
+    event_update = EventUpdate(**event_dict)
+
+    print(event_update)
+    
+    # Actualizar el evento en la base de datos
+    await event_services.update_event(eventId, event_update)
+    
+    return event
