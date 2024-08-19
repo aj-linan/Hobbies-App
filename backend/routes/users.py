@@ -13,6 +13,7 @@ async def create_user(user: UserCreate):
     new_user = await user_services.create_user(user)
     return new_user
 
+
 # Ruta para obtener un usuario por su ID
 @router.get("/users/{user_id}", response_model=UserRead)
 async def read_user(user_id: str):
@@ -31,10 +32,5 @@ async def update_user(user_id: str, user: UserUpdate):
         raise HTTPException(status_code=404, detail="User not found")
     return updated_user
 
-# Ruta para obtener una lista de todos los usuarios
-@router.get("/users/", response_model=List[UserRead])
-async def list_users():
-    # Obtener una lista de todos los usuarios utilizando el servicio de usuarios
-    users = await user_services.list_users()
-    return users
+
 

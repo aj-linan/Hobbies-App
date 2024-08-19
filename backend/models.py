@@ -1,72 +1,56 @@
-from pymongo import MongoClient
+from pydantic import BaseModel, Field
+from typing import List, Optional
+from datetime import datetime, timezone
 from bson import ObjectId
-from database import db
-from typing import List
 
-# El archivo models.py contiene las definiciones de los modelos que se utilizarán para interactuar con la BBDD. 
-# Los modelos definen la estructura de los documentos que se almacenan en las colecciones de MongoDB.
-
-# Definición del modelo de Usuario en MongoDB
-class UserModel:
-    def __init__(self, id: str, name: str, email: str, password: str):
-        self.id = id
-        self.name = name
-        self.email = email
-        self.password = password
-        self.events = []  # Lista de IDs de eventos en los que el usuario participa
-
-    # Conversión a documento de MongoDB
-    def to_document(self):
-        return {
-            "id":self.id,
-            "name": self.name,
-            "email": self.email,
-            "password": self.password,
-            "events": self.events
+# Modelo de Usuario
+class UserModel(BaseModel):
+    id: str
+    email: str
+    password: str
+    first_name: Optional[str] = None
+    last_name: Optional[str] = None
+    interests: List[str] = Field(default_factory=list)
+    location: Optional[str] = None
+    profile_visibility: bool = True
+    groups: List[str] = Field(default_factory=list)  # Lista de IDs de los grupos a los que pertenece el usuario
+    created_events: List[str] = Field(default_factory=list)  # Lista de IDs de eventos creados por el usuario
+    participating_events: List[str] = Field(default_factory=list)  # Lista de IDs de eventos en los que participa el usuario
+    created_at: datetime = Field(default_factory=lambda: datetime.now(tz=timezone.utc))  # Fecha de creación del usuario
+    
+    class Config:
+        json_encoders = {
+            ObjectId: str
         }
 
-    # Conversión de documento de MongoDB a objeto UserModel
-    @classmethod
-    def from_document(cls, document):
-        user = cls(
-            id=document["id"],
-            name=document["name"],
-            email=document["email"],
-            password=document["password"]
-        )
-        user.events = document.get("events", [])
-        return user
+# Modelo de Evento
+class EventModel(BaseModel):
+    id: str 
+    title: str
+    description: str
+    creator_id: str  # ID del creador del evento
+    participants: List[str] = Field(default_factory=list)  # Lista de IDs de participantes en el evento
+    date: str
+    max_participants: int = 10  # Número máximo de participantes
+    created_at: datetime = Field(default_factory=lambda: datetime.now(tz=timezone.utc))  # Fecha de creación del evento
+    updated_at: Optional[datetime] = None  # Fecha de última actualización del evento
 
-# Definición del modelo de Evento en MongoDB
-class EventModel:
-    def __init__(self, id: str, title: str, description: str, creator_id: ObjectId, participants: List[str], date: str):
-        self.id = id
-        self.title = title
-        self.description = description
-        self.creator_id = creator_id
-        self.participants = []  # Lista de IDs de participantes en el evento
-        self.date = date
-
-    # Conversión a documento de MongoDB
-    def to_document(self):
-        return {
-            "_id":self.id,
-            "title": self.title,
-            "description": self.description,
-            "creator_id": self.creator_id,
-            "participants": self.participants,
-            "date": self.date
+    class Config:
+        json_encoders = {
+            ObjectId: str
         }
 
-    # Conversión de documento de MongoDB a objeto EventModel
-    @classmethod
-    def from_document(cls, document):
-        event = cls(
-            _id=document["id"],
-            title=document["title"],
-            description=document["description"],
-            creator_id=document["creator_id"],
-            date=document["date"]
-        )
-        event.participants = document.get("participants", [])
-        return event
+# Modelo de Grupo
+class GroupModel(BaseModel):
+    id: str
+    name: str
+    description: str
+    is_private: bool  # Indica si el grupo es privado o público
+    members: List[str] = Field(default_factory=list)  # Lista de IDs de miembros del grupo
+    interests: List[str] = Field(default_factory=list)  # Lista de intereses del grupo
+    created_at: datetime = Field(default_factory=lambda: datetime.now(tz=timezone.utc))  # Fecha de creación del grupo
+    
+    class Config:
+        json_encoders = {
+            ObjectId: str
+        }

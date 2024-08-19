@@ -44,7 +44,7 @@ async def list_events():
     events = await event_services.list_events()
     return events
 
-# RutA para añadir a un usuario a un evento
+# Ruta para anadir a un usuario a un evento
 @router.post("/events/{eventId}/participants/{userId}", response_model = EventRead)
 async def add_user_to_event(eventId: str, userId: str):
     # Convertir los IDs a ObjectId

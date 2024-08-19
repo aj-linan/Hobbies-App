@@ -1,11 +1,9 @@
-from pydantic import BaseModel, Field, ConfigDict
+from pydantic import BaseModel, Field
 from typing import List, Optional
 from bson import ObjectId
+from datetime import datetime, UTC
 
-# El archivo schemas.py contiene las definiciones de los esquemas que se utilizan para 
-# validar los datos que entran y salen de tu API
-
-# Definimos un campo personalizado para ObjectId
+# Campo personalizado para ObjectId
 class PyObjectId(ObjectId):
     @classmethod
     def __get_validators__(cls):
@@ -20,26 +18,41 @@ class PyObjectId(ObjectId):
 # Esquema para leer un usuario
 class UserRead(BaseModel):
     id: str = Field(default_factory=str)  # Convertimos ObjectId a str
-    name: str
     email: str
-    events: List[str] = Field(default_factory=list)  # Convertimos ObjectId a str
-
-    # Configuración del modelo
-    model_config = ConfigDict(
-        from_attributes=True,  # Permite convertir datos desde atributos ORM
-        populate_by_name=True,  # Permite popular campos usando nombres de campo alternativos
-    )
+    first_name: Optional[str] = None
+    last_name: Optional[str] = None
+    interests: List[str] = Field(default_factory=list)
+    location: Optional[str] = None
+    profile_visibility: bool = True
+    groups: List[str] = Field(default_factory=list)  # Convertimos ObjectId a str
+    created_events: List[str] = Field(default_factory=list)  # Convertimos ObjectId a str
+    participating_events: List[str] = Field(default_factory=list)  # Convertimos ObjectId a str
+    created_at: datetime
 
 # Esquema para crear un usuario
 class UserCreate(BaseModel):
-    name: str
     email: str
-    password: str
+    password: str 
+    first_name: Optional[str] = None
+    last_name: Optional[str] = None
+    interests: Optional[List[str]] = Field(default_factory=list)
+    location: Optional[str] = None
+    profile_visibility: Optional[bool] = True
+    groups: Optional[List[str]] = Field(default_factory=list)  # Convertimos ObjectId a str
+    created_events: Optional[List[str]] = Field(default_factory=list)  # Convertimos ObjectId a str
+    participating_events: Optional[List[str]] = Field(default_factory=list)  # Convertimos ObjectId a str
 
 # Esquema para actualizar un usuario
 class UserUpdate(BaseModel):
-    name: Optional[str]
     email: Optional[str]
+    first_name: Optional[str]
+    last_name: Optional[str]
+    interests: Optional[List[str]]
+    location: Optional[str]
+    profile_visibility: Optional[bool]
+    groups: Optional[List[str]]
+    created_events: Optional[List[str]]
+    participating_events: Optional[List[str]]
 
 # Esquema para leer un evento
 class EventRead(BaseModel):
@@ -49,13 +62,16 @@ class EventRead(BaseModel):
     creator_id: str  # Convertimos ObjectId a str
     participants: List[str] = Field(default_factory=list)  # Convertimos ObjectId a str
     date: str
+    max_participants: int
+    created_at: datetime
+    updated_at: Optional[datetime]
 
 # Esquema para crear un evento
 class EventCreate(BaseModel):
     title: str
     description: str
-    # creator_id: str  # Convertimos ObjectId a str
     date: str
+    max_participants: Optional[int] = 10
 
 # Esquema para actualizar un evento
 class EventUpdate(BaseModel):
@@ -63,3 +79,30 @@ class EventUpdate(BaseModel):
     description: Optional[str]
     date: Optional[str]
     participants: Optional[List[str]] = Field(default_factory=list)
+    max_participants: Optional[int] = None
+
+# Esquema para leer un grupo
+class GroupRead(BaseModel):
+    id: str = Field(default_factory=str)  # Convertimos ObjectId a str
+    name: str
+    description: str
+    is_private: bool
+    members: List[str] = Field(default_factory=list)  # Convertimos ObjectId a str
+    interests: List[str] = Field(default_factory=list)
+    created_at: datetime
+
+# Esquema para crear un grupo
+class GroupCreate(BaseModel):
+    name: str
+    description: str
+    is_private: bool
+    members: Optional[List[str]] = Field(default_factory=list)  # Convertimos ObjectId a str
+    interests: Optional[List[str]] = Field(default_factory=list)
+
+# Esquema para actualizar un grupo
+class GroupUpdate(BaseModel):
+    name: Optional[str]
+    description: Optional[str]
+    is_private: Optional[bool]
+    members: Optional[List[str]] = Field(default_factory=list)
+    interests: Optional[List[str]] = Field(default_factory=list)
