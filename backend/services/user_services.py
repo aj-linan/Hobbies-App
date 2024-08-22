@@ -32,47 +32,51 @@ async def create_user(user: UserCreate) -> UserModel:
     user_dict["id"] = str(new_user.inserted_id)
     user_dict.pop("_id")  # Eliminar el campo _id si existe
     
-    print(user_dict)
     return UserModel(**user_dict)
 
 # Servicio para listar todos los usuarios
 async def list_users() -> List[UserRead]:
-    pipeline = [
-        {
-            "$project": {
-                "id": {"$toString": "$_id"},
-                "_id": 0,
-                "email": 1
-            }
-        }
-    ]
-    users = await db.get_collection("users").aggregate(pipeline).to_list(length=100)
     
-    return [UserRead(**user) for user in users]
-
+    cursor = db.get_collection("users").find()
+    users = [UserModel.from_db(user) async for user in cursor]
+    return users
 
 # Servicio para obtener un usuario por su ID
 async def get_user_by_id(user_id: str) -> UserRead:
-    user = await db.get_collection("users").find_one({"_id": ObjectId(user_id)})
-    user["id"] = str(user["_id"])
-    user.pop("_id")
-    print()
-    if user:
-        return UserRead(**user)
-    return None
+
+    # Buscar el usuario en la base de datos usando el ID
+    user_data = await db.get_collection("users").find_one({"_id": ObjectId(user_id)})
+    
+    # Si no se encuentra el usuario, retornar None
+    if user_data is None:
+        return None
+    
+    # Convertir el documento de la base de datos a un modelo de usuario
+    return UserModel.from_db(user_data)
 
 # Servicio para actualizar un usuario existente
-async def update_user(user_id: str, user: UserUpdate) -> UserModel:
-    user_dict = {k: v for k, v in user.model_dump().items() if v is not None}
-    if "password" in user_dict:
-        user_dict["hashed_password"] = hash_password(user_dict.pop("password"))
+async def update_user(user_id: str, user_update: UserUpdate) -> UserRead:
+
+    # Convertir el modelo a diccionario y filtrar campos nulos
+    user_dict = user_update.model_dump()
+
+    # Filtrar valores nulos, vacíos y listas vacías
+    filtered_user_dict = {k: v for k, v in user_dict.items() if v not in [None, "", [], {}]}
+
+    # Verificar si hay campos para actualizar
+    if not filtered_user_dict:
+        raise HTTPException(status_code=400, detail="No fields to update")
+
+    # Actualizar el usuario en la base de datos
     result = await db.get_collection("users").update_one(
-        {"_id": ObjectId(user_id)}, {"$set": user_dict}
+        {"_id": ObjectId(user_id)}, {"$set": filtered_user_dict}
     )
+
+    # Verificar si la actualización fue exitosa
     if result.matched_count == 1:
+        # Obtener y retornar el usuario actualizado
         return await get_user_by_id(user_id)
     return None
-
 
 
 # Función auxiliar para encriptar la contraseña (simplificada)

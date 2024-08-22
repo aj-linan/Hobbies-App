@@ -48,9 +48,6 @@ async def list_events():
 @router.post("/events/{eventId}/participants/{userId}", response_model = EventRead)
 async def add_user_to_event(eventId: str, userId: str):
     # Convertir los IDs a ObjectId
-    # event_obj_id = ObjectId(eventId)
-    user_obj_id = ObjectId(userId)
-
     # Buscar el evento
     event = await event_services.get_event_by_id(eventId)
     
@@ -62,11 +59,17 @@ async def add_user_to_event(eventId: str, userId: str):
         raise HTTPException(status_code=400, detail="User already added to this event")
 
     # Añadir el ID del usuario a la lista de participantes
-    event.participants.append(userId)
+    try:
+        # Intentar convertir userId a ObjectId y añadirlo a la lista de participantes
+        event.participants.append(ObjectId(userId))
+    except Exception as e:
+        # Si falla, lanzar una excepción HTTP con el estado 400 Bad Request
+        raise HTTPException(status_code=400, detail=f"Invalid userId: {e}")
+
 
     print(event)
 
-    event_dict = event.to_document()
+    event_dict = event.model_dump()
 
     event_update = EventUpdate(**event_dict)
 

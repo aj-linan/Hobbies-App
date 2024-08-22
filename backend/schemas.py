@@ -21,12 +21,13 @@ class UserRead(BaseModel):
     email: str
     first_name: Optional[str] = None
     last_name: Optional[str] = None
+    birthdate:Optional[datetime] = None
     interests: List[str] = Field(default_factory=list)
     location: Optional[str] = None
-    profile_visibility: bool = True
-    groups: List[str] = Field(default_factory=list)  # Convertimos ObjectId a str
-    created_events: List[str] = Field(default_factory=list)  # Convertimos ObjectId a str
-    participating_events: List[str] = Field(default_factory=list)  # Convertimos ObjectId a str
+    verified: bool
+    groups: Optional[List[str]] = Field(default_factory=list)  # Convertimos ObjectId a str
+    created_events: Optional[List[str]] = Field(default_factory=list)  # Convertimos ObjectId a str
+    participating_events: Optional[List[str]] = Field(default_factory=list)  # Convertimos ObjectId a str
     created_at: datetime
 
 # Esquema para crear un usuario
@@ -35,9 +36,11 @@ class UserCreate(BaseModel):
     password: str 
     first_name: Optional[str] = None
     last_name: Optional[str] = None
+    birthdate:Optional[datetime] = None
     interests: Optional[List[str]] = Field(default_factory=list)
     location: Optional[str] = None
     profile_visibility: Optional[bool] = True
+    verified: Optional[bool] = False
     groups: Optional[List[str]] = Field(default_factory=list)  # Convertimos ObjectId a str
     created_events: Optional[List[str]] = Field(default_factory=list)  # Convertimos ObjectId a str
     participating_events: Optional[List[str]] = Field(default_factory=list)  # Convertimos ObjectId a str
@@ -49,10 +52,6 @@ class UserUpdate(BaseModel):
     last_name: Optional[str]
     interests: Optional[List[str]]
     location: Optional[str]
-    profile_visibility: Optional[bool]
-    groups: Optional[List[str]]
-    created_events: Optional[List[str]]
-    participating_events: Optional[List[str]]
 
 # Esquema para leer un evento
 class EventRead(BaseModel):
@@ -78,7 +77,6 @@ class EventUpdate(BaseModel):
     title: Optional[str]
     description: Optional[str]
     date: Optional[str]
-    participants: Optional[List[str]] = Field(default_factory=list)
     max_participants: Optional[int] = None
 
 # Esquema para leer un grupo
