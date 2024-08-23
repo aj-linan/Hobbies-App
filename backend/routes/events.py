@@ -1,9 +1,7 @@
 from fastapi import APIRouter, HTTPException, Depends
 from schemas import EventCreate, EventRead, EventUpdate
-from services import event_services # Servicio de eventos
-from models import EventModel
+from services import event_services, user_services # Servicio de eventos
 from typing import List
-from bson import ObjectId
 
 router = APIRouter()
 
@@ -45,37 +43,15 @@ async def list_events():
     return events
 
 # Ruta para anadir a un usuario a un evento
-@router.post("/events/{eventId}/participants/{userId}", response_model = EventRead)
+@router.post("/users/{userId}/participate/{eventId}/", response_model = object)
 async def add_user_to_event(eventId: str, userId: str):
-    # Convertir los IDs a ObjectId
-    # Buscar el evento
-    event = await event_services.get_event_by_id(eventId)
-    
-    if not event:
-        raise HTTPException(status_code=404, detail="Event not found")
-
-    # Verificar si el usuario ya es un participante
-    if userId in event.participants:
-        raise HTTPException(status_code=400, detail="User already added to this event")
-
-    # Añadir el ID del usuario a la lista de participantes
-    try:
-        # Intentar convertir userId a ObjectId y añadirlo a la lista de participantes
-        event.participants.append(ObjectId(userId))
-    except Exception as e:
-        # Si falla, lanzar una excepción HTTP con el estado 400 Bad Request
-        raise HTTPException(status_code=400, detail=f"Invalid userId: {e}")
-
-
-    print(event)
-
-    event_dict = event.model_dump()
-
-    event_update = EventUpdate(**event_dict)
-
-    print(event_update)
-    
-    # Actualizar el evento en la base de datos
-    await event_services.update_event(eventId, event_update)
-    
+    event = await event_services.add_user_to_event(eventId, userId)
     return event
+
+# Ruta para eliminar a un usuario a un evento
+@router.delete("/users/{userId}/participate/{eventId}/", response_model = object)
+async def remove_user_from_event(eventId: str, userId: str):
+    event = await event_services.remove_user_from_event(eventId, userId)
+    return event
+
+

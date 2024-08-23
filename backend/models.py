@@ -20,7 +20,7 @@ class UserModel(BaseModel):
     created_events: Optional[List[str]] = Field(default_factory=list)  # Lista de IDs de eventos creados por el usuario
     created_events: Optional[List[str]] = Field(default_factory=list)  # Lista de IDs de eventos creados por el usuario
     participating_events: Optional[List[str]] = Field(default_factory=list)  # Lista de IDs de eventos en los que participa el usuario
-    created_at: datetime = Field(default_factory=lambda: datetime.now(tz=timezone.utc))  # Fecha de creación del usuario
+    created_at: datetime  # Fecha de creación del usuario
 
     @classmethod
     def from_db(cls, data):
@@ -51,7 +51,7 @@ class EventModel(BaseModel):
     participants: List[str] = Field(default_factory=list)  # Lista de IDs de participantes en el evento
     date: str
     max_participants: int = 10  # Número máximo de participantes
-    created_at: datetime = Field(default_factory=lambda: datetime.now(tz=timezone.utc))  # Fecha de creación del evento
+    created_at: Optional[datetime] # Fecha de creación del evento
     updated_at: Optional[datetime] = None  # Fecha de última actualización del evento
 
     @classmethod

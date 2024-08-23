@@ -1,7 +1,7 @@
 from pydantic import BaseModel, Field
 from typing import List, Optional
 from bson import ObjectId
-from datetime import datetime, UTC
+from datetime import datetime, timezone
 
 # Campo personalizado para ObjectId
 class PyObjectId(ObjectId):
@@ -59,11 +59,10 @@ class EventRead(BaseModel):
     title: str
     description: str
     creator_id: str  # Convertimos ObjectId a str
-    participants: List[str] = Field(default_factory=list)  # Convertimos ObjectId a str
+    participants: Optional[List[str]] = Field(default_factory=list)  # Convertimos ObjectId a str
     date: str
     max_participants: int
     created_at: datetime
-    updated_at: Optional[datetime]
 
 # Esquema para crear un evento
 class EventCreate(BaseModel):
@@ -78,6 +77,20 @@ class EventUpdate(BaseModel):
     description: Optional[str]
     date: Optional[str]
     max_participants: Optional[int] = None
+    participants: Optional[List[str]] = Field(default_factory=list)
+    updated_at: datetime
+
+    @classmethod
+    def from_db(cls, db_data: dict) -> 'EventUpdate':
+        # Convertir ObjectId a str
+        db_data['participants'] = [str(pid) for pid in db_data.get('participants', [])]
+        return cls(**db_data)
+    
+    def to_db(self) -> dict:
+        # Convertir str a ObjectId
+        db_data = self.model_dump()
+        db_data['participants'] = [ObjectId(pid) for pid in db_data['participants']]
+        return db_data
 
 # Esquema para leer un grupo
 class GroupRead(BaseModel):
