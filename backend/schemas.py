@@ -43,11 +43,11 @@ class UserCreate(BaseModel):
 
 # Esquema para actualizar un usuario
 class UserUpdate(BaseModel):
-    email: Optional[str]
-    first_name: Optional[str]
-    last_name: Optional[str]
-    interests: Optional[List[str]]
-    location: Optional[str]
+    email: Optional[str] = None
+    first_name: Optional[str] = None
+    last_name: Optional[str] = None
+    interests: Optional[List[str]] = None
+    location: Optional[str] = None
 
 # Esquema para leer un evento
 class EventRead(BaseModel):
@@ -69,12 +69,12 @@ class EventCreate(BaseModel):
 
 # Esquema para actualizar un evento
 class EventUpdate(BaseModel):
-    title: Optional[str]
+    title: Optional[str] = None
     description: Optional[str]
-    date: Optional[str]
+    date: Optional[str] = None
     max_participants: Optional[int] = None
-    participants: Optional[List[str]] = Field(default_factory=list)
-    updated_at: datetime
+    participants: Optional[List[str]] = None
+    updated_at: datetime = None
 
     @classmethod
     def from_db(cls, db_data: dict) -> 'EventUpdate':
