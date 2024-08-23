@@ -18,8 +18,9 @@ class UserModel(BaseModel):
     verified: bool = False
     groups: Optional[List[str]] = Field(default_factory=list)  # Lista de IDs de los grupos a los que pertenece el usuario
     created_events: Optional[List[str]] = Field(default_factory=list)  # Lista de IDs de eventos creados por el usuario
-    created_events: Optional[List[str]] = Field(default_factory=list)  # Lista de IDs de eventos creados por el usuario
+    created_groups: Optional[List[str]] = Field(default_factory=list)  # Lista de IDs de eventos creados por el usuario
     participating_events: Optional[List[str]] = Field(default_factory=list)  # Lista de IDs de eventos en los que participa el usuario
+    participating_groups: Optional[List[str]] = Field(default_factory=list)  # Lista de IDs de eventos en los que participa el usuario
     created_at: datetime  # Fecha de creación del usuario
 
     @classmethod
@@ -28,7 +29,10 @@ class UserModel(BaseModel):
         data['id'] = str(data['_id'])
         data['groups'] = [str(g) for g in data.get('groups', [])]
         data['created_events'] = [str(e) for e in data.get('created_events', [])]
+        data['created_groups'] = [str(e) for e in data.get('created_groups', [])]
         data['participating_events'] = [str(e) for e in data.get('participating_events', [])]
+        data['groups'] = [str(e) for e in data.get('groups', [])]
+
         return cls(**data)
 
     def to_db(self):
@@ -37,7 +41,9 @@ class UserModel(BaseModel):
             "_id": ObjectId(self.id),
             "groups": [ObjectId(g) for g in self.groups],
             "created_events": [ObjectId(e) for e in self.created_events],
+            "created_groups": [ObjectId(e) for e in self.created_groups],
             "participating_events": [ObjectId(e) for e in self.participating_events],
+            "groups": [ObjectId(e) for e in self.groups]
         }
         return db_data
     
@@ -48,7 +54,7 @@ class EventModel(BaseModel):
     title: str
     description: str
     creator_id: str  # ID del creador del evento
-    participants: List[str] = Field(default_factory=list)  # Lista de IDs de participantes en el evento
+    participants: Optional[List[str]] = Field(default_factory=list)  # Lista de IDs de participantes en el evento
     date: str
     max_participants: int = 10  # Número máximo de participantes
     created_at: Optional[datetime] # Fecha de creación del evento
@@ -76,12 +82,26 @@ class GroupModel(BaseModel):
     id: str
     name: str
     description: str
-    is_private: bool  # Indica si el grupo es privado o público
-    members: List[str] = Field(default_factory=list)  # Lista de IDs de miembros del grupo
-    interests: List[str] = Field(default_factory=list)  # Lista de intereses del grupo
-    created_at: datetime = Field(default_factory=lambda: datetime.now(tz=timezone.utc))  # Fecha de creación del grupo
+    is_private: bool = False # Indica si el grupo es privado o público
+    creator_id: str
+    members: Optional[List[str]] = Field(default_factory=list)  # Lista de IDs de miembros del grupo
+    interests: Optional[List[str]] = Field(default_factory=list)  # Lista de intereses del grupo
+    created_at: datetime # Fecha de creación del grupo
+    updated_at: Optional[datetime] = None  # Fecha de última actualización del evento
+    max_participants: Optional[int] = 10
+
+    @classmethod
+    def from_db(cls, db_data: dict) -> 'EventModel':
+        # Convertir ObjectId a str
+        db_data['id'] = str(db_data['_id'])
+        db_data['creator_id'] = str(db_data.get('creator_id', ''))
+        db_data['members'] = [str(pid) for pid in db_data.get('members', [])]
+        return cls(**db_data)
     
-    class Config:
-        json_encoders = {
-            ObjectId: str
-        }
+    def to_db(self) -> dict:
+        # Convertir str a ObjectId
+        db_data = self.model_dump()
+        db_data['_id'] = ObjectId(db_data['id'])
+        db_data['creator_id'] = ObjectId(db_data['creator_id'])
+        db_data['members'] = [ObjectId(pid) for pid in db_data['members']]
+        return db_data

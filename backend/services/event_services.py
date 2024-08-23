@@ -29,7 +29,7 @@ async def create_event(user_id: str, event: EventCreate) -> EventModel:
     
     # Verificar si la actualización del usuario fue exitosa
     if result.modified_count != 1:
-        raise HTTPException(status_code=500, detail="Error al actualizar el usuario con el nuevo evento.")
+        raise HTTPException(status_code=500, detail="Error updating the user")
     
     return EventModel(**event_dict)
 
@@ -62,7 +62,6 @@ async def get_events_by_user_id(user_id: str) -> List[EventModel]:
     
     except Exception as e:
         # Manejar el error apropiadamente
-        print(f"An error occurred: {e}")
         raise HTTPException(status_code=500, detail="An error occurred while retrieving events.")
     
     
@@ -79,6 +78,8 @@ async def update_event(event_id: str, event: EventUpdate) -> EventModel:
     if not filtered_event_dict:
         raise HTTPException(status_code=400, detail="No fields to update")
 
+    filtered_event_dict["updated_at"] = datetime.now(tz=timezone.utc)
+    
     # Actualizar el evento en la base de datos
     result = await db.get_collection("events").update_one(
         {"_id": ObjectId(event_id)}, {"$set": filtered_event_dict}
@@ -94,17 +95,15 @@ async def update_event(event_id: str, event: EventUpdate) -> EventModel:
 # Servicio para listar todos los eventos
 async def list_events() -> List[EventModel]:
 
-    # try:
-    cursor = db.get_collection("events").find()
-    events = []
-    async for db_event in cursor:
-        print(db_event)
-        print(EventModel.from_db(db_event))
-        events.append(EventModel.from_db(db_event))
+    try:
+        cursor = db.get_collection("events").find()
+        events = []
+        async for db_event in cursor:
+            events.append(EventModel.from_db(db_event))
 
-    return events
-    # except Exception as e:
-    #     raise HTTPException(status_code=500, detail="Error retrieving events")
+        return events
+    except Exception as e:
+        raise HTTPException(status_code=500, detail="Error retrieving events")
 
 
 async def add_user_to_event(eventId: str, userId: str) -> object:

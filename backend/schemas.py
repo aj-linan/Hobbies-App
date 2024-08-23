@@ -26,6 +26,7 @@ class UserRead(BaseModel):
     location: Optional[str] = None
     verified: bool
     groups: Optional[List[str]] = Field(default_factory=list)  # Convertimos ObjectId a str
+    created_groups: Optional[List[str]] = Field(default_factory=list) 
     created_events: Optional[List[str]] = Field(default_factory=list)  # Convertimos ObjectId a str
     participating_events: Optional[List[str]] = Field(default_factory=list)  # Convertimos ObjectId a str
     created_at: datetime
@@ -39,11 +40,6 @@ class UserCreate(BaseModel):
     birthdate:Optional[datetime] = None
     interests: Optional[List[str]] = Field(default_factory=list)
     location: Optional[str] = None
-    profile_visibility: Optional[bool] = True
-    verified: Optional[bool] = False
-    groups: Optional[List[str]] = Field(default_factory=list)  # Convertimos ObjectId a str
-    created_events: Optional[List[str]] = Field(default_factory=list)  # Convertimos ObjectId a str
-    participating_events: Optional[List[str]] = Field(default_factory=list)  # Convertimos ObjectId a str
 
 # Esquema para actualizar un usuario
 class UserUpdate(BaseModel):
@@ -101,19 +97,32 @@ class GroupRead(BaseModel):
     members: List[str] = Field(default_factory=list)  # Convertimos ObjectId a str
     interests: List[str] = Field(default_factory=list)
     created_at: datetime
+    max_participants: int
 
 # Esquema para crear un grupo
 class GroupCreate(BaseModel):
     name: str
     description: str
-    is_private: bool
-    members: Optional[List[str]] = Field(default_factory=list)  # Convertimos ObjectId a str
+    is_private: bool = False
     interests: Optional[List[str]] = Field(default_factory=list)
+    max_participants: Optional[int] = 10
 
 # Esquema para actualizar un grupo
 class GroupUpdate(BaseModel):
-    name: Optional[str]
-    description: Optional[str]
-    is_private: Optional[bool]
-    members: Optional[List[str]] = Field(default_factory=list)
-    interests: Optional[List[str]] = Field(default_factory=list)
+    name: Optional[str] = None
+    description: Optional[str] = None
+    members: Optional[List[str]] = None
+    interests: Optional[List[str]] = None
+    updated_at: datetime = None
+
+    @classmethod
+    def from_db(cls, db_data: dict) -> 'EventUpdate':
+        # Convertir ObjectId a str
+        db_data['members'] = [str(pid) for pid in db_data.get('members', [])]
+        return cls(**db_data)
+    
+    def to_db(self) -> dict:
+        # Convertir str a ObjectId
+        db_data = self.model_dump()
+        db_data['members'] = [ObjectId(pid) for pid in db_data['members']]
+        return db_data

@@ -1,4 +1,4 @@
-from models import UserModel
+from models import UserModel, EventModel, GroupModel
 from schemas import UserCreate, UserUpdate, UserRead
 from database import db  # Conexión a la base de datos
 from bson import ObjectId
@@ -78,6 +78,23 @@ async def update_user(user_id: str, user_update: UserUpdate) -> UserRead:
         return await get_user_by_id(user_id)
     return None
 
+# Servicio para mostrar los eventos en los que participa un usuario
+async def get_user_participating_events(user_id: str) -> List[EventModel]:
+    cursor = db.get_collection("events").find({"participants": ObjectId(user_id)})
+    events = await cursor.to_list(length=100)
+    return [EventModel.from_db(event) for event in events]
+
+# Servicio para mostrar los eventos creados por un usuario
+async def get_user_created_events(user_id: str) -> List[EventModel]:
+    cursor = db.get_collection("events").find({"creator_id": ObjectId(user_id)})
+    events = await cursor.to_list(length=100)
+    return [EventModel.from_db(event) for event in events]
+
+# Servicio para mostrar los grupos en los que esta un usuario
+async def get_user_groups(user_id: str) -> List[GroupModel]:
+    cursor = db.get_collection("groups").find({"members": ObjectId(user_id)})
+    groups = await cursor.to_list(length=100)
+    return [GroupModel.from_db(group) for group in groups]
 
 # Función auxiliar para encriptar la contraseña (simplificada)
 def hash_password(password: str) -> str:
