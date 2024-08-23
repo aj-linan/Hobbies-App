@@ -84,11 +84,11 @@ async def add_user_to_group(groupId: str, userId: str):
     group = await group_services.add_user_to_group(groupId, userId)
     return group
 
-# # Ruta para eliminar a un usuario de un grupo
-# @router.delete("/users/{userId}/leave/{groupId}/", response_model=object)
-# async def remove_user_from_group(groupId: str, userId: str):
-#     group = await group_services.remove_user_from_group(groupId, userId)
-#     return group
+# Ruta para eliminar a un usuario de un grupo
+@router.delete("/users/{userId}/leave/{groupId}/", response_model=object)
+async def remove_user_from_group(groupId: str, userId: str):
+    group = await group_services.remove_user_from_group(groupId, userId)
+    return group
 
 
 
