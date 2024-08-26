@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, EmailStr
 from typing import List, Optional
 from bson import ObjectId
 from datetime import datetime, timezone
@@ -18,7 +18,7 @@ class PyObjectId(ObjectId):
 # Esquema para leer un usuario
 class UserRead(BaseModel):
     id: str = Field(default_factory=str)  # Convertimos ObjectId a str
-    email: str
+    email: EmailStr
     first_name: Optional[str] = None
     last_name: Optional[str] = None
     birthdate:Optional[datetime] = None
@@ -33,17 +33,18 @@ class UserRead(BaseModel):
 
 # Esquema para crear un usuario
 class UserCreate(BaseModel):
-    email: str
+    email: EmailStr
     password: str 
     first_name: Optional[str] = None
     last_name: Optional[str] = None
     birthdate:Optional[datetime] = None
     interests: Optional[List[str]] = Field(default_factory=list)
     location: Optional[str] = None
+    verified: bool = False
 
 # Esquema para actualizar un usuario
 class UserUpdate(BaseModel):
-    email: Optional[str] = None
+    email: Optional[EmailStr] = None
     first_name: Optional[str] = None
     last_name: Optional[str] = None
     interests: Optional[List[str]] = None

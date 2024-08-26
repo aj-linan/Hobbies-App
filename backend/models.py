@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, EmailStr
 from typing import List, Optional
 from datetime import datetime, timezone
 from bson import ObjectId
@@ -7,7 +7,7 @@ from bson import ObjectId
 class UserModel(BaseModel):
 
     id: str
-    email: str
+    email: EmailStr
     password: str
     first_name: Optional[str] = None
     last_name: Optional[str] = None

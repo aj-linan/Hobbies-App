@@ -5,6 +5,7 @@ from bson import ObjectId
 from typing import List
 from datetime import datetime, timezone
 from fastapi import HTTPException
+from services import auth_services
 
 # El archivo client_services.py contiene la lógica de negocio de la aplicación. 
 # Este archivo actúa como una capa de servicio que encapsula la lógica para interactuar con los modelos y esquemas.
@@ -25,7 +26,7 @@ async def create_user(user: UserCreate) -> UserModel:
     user_dict["created_at"] = datetime.now(tz=timezone.utc)
     
     # Encriptar la contraseña
-    user_dict["password"] = hash_password(user_dict.pop("password"))
+    user_dict["password"] = auth_services.hash_password(user_dict.pop("password"))
     
     # Insertar el nuevo usuario en la base de datos
     new_user = await db.get_collection("users").insert_one(user_dict)
@@ -46,6 +47,18 @@ async def get_user_by_id(user_id: str) -> UserRead:
 
     # Buscar el usuario en la base de datos usando el ID
     user_data = await db.get_collection("users").find_one({"_id": ObjectId(user_id)})
+    
+    # Si no se encuentra el usuario, retornar None
+    if user_data is None:
+        return None
+    
+    # Convertir el documento de la base de datos a un modelo de usuario
+    return UserModel.from_db(user_data)
+
+async def get_user_by_email(user_email: str) -> UserRead:
+
+    # Buscar el usuario en la base de datos usando el ID
+    user_data = await db.get_collection("users").find_one({"email": user_email})
     
     # Si no se encuentra el usuario, retornar None
     if user_data is None:
@@ -96,7 +109,33 @@ async def get_user_groups(user_id: str) -> List[GroupModel]:
     groups = await cursor.to_list(length=100)
     return [GroupModel.from_db(group) for group in groups]
 
-# Función auxiliar para encriptar la contraseña (simplificada)
-def hash_password(password: str) -> str:
-    # Aquí podrías usar una librería como bcrypt
-    return "hashed_" + password  # Esto es solo un ejemplo simplificado
+async def register_user(user_data: UserCreate) -> UserRead:
+    
+    # Verificar si el correo ya existe
+    if await db.get_collection("users").find_one({"email": user_data.email}):
+        raise HTTPException(status_code=400, detail="Email already registered")
+
+    # Hashing de la contraseña antes de almacenarla
+    hashed_password = auth_services.hash_password(user_data.password)
+
+    # Transformacion a dict
+    user_dict = user_data.model_dump()
+
+    # Insertar la fecha de creación actual en UTC
+    user_dict["created_at"] = datetime.now(tz=timezone.utc)
+
+    # Insertar contrasena
+    user_dict['password'] = hashed_password  # Actualizar la contraseña hasheada
+
+    # Insertar el nuevo usuario en la base de datos
+    new_user = await db.get_collection("users").insert_one(user_dict)
+    user_dict['id'] = str(new_user.inserted_id)
+    del user_dict['_id']  # Eliminar _id antes de devolverlo al usuario
+    del user_dict['password']  # No devolver la contraseña
+
+    return UserRead(**user_dict)
+
+
+
+
+
