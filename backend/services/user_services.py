@@ -4,7 +4,7 @@ from database import db  # Conexión a la base de datos
 from bson import ObjectId
 from typing import List
 from datetime import datetime, timezone
-from fastapi import HTTPException
+from fastapi import HTTPException, Depends
 from services import auth_services
 
 # El archivo client_services.py contiene la lógica de negocio de la aplicación. 
@@ -68,28 +68,28 @@ async def get_user_by_email(user_email: str) -> UserRead:
     return UserModel.from_db(user_data)
 
 # Servicio para actualizar un usuario existente
-async def update_user(user_id: str, user_update: UserUpdate) -> UserRead:
+# async def update_user(user_id: str, user_update: UserUpdate) -> UserRead:
 
-    # Convertir el modelo a diccionario y filtrar campos nulos
-    user_dict = user_update.model_dump()
+#     # Convertir el modelo a diccionario y filtrar campos nulos
+#     user_dict = user_update.model_dump()
 
-    # Filtrar valores nulos, vacíos y listas vacías
-    filtered_user_dict = {k: v for k, v in user_dict.items() if v not in [None, "", [], {}]}
+#     # Filtrar valores nulos, vacíos y listas vacías
+#     filtered_user_dict = {k: v for k, v in user_dict.items() if v not in [None, "", [], {}]}
 
-    # Verificar si hay campos para actualizar
-    if not filtered_user_dict:
-        raise HTTPException(status_code=400, detail="No fields to update")
+#     # Verificar si hay campos para actualizar
+#     if not filtered_user_dict:
+#         raise HTTPException(status_code=400, detail="No fields to update")
 
-    # Actualizar el usuario en la base de datos
-    result = await db.get_collection("users").update_one(
-        {"_id": ObjectId(user_id)}, {"$set": filtered_user_dict}
-    )
+#     # Actualizar el usuario en la base de datos
+#     result = await db.get_collection("users").update_one(
+#         {"_id": ObjectId(user_id)}, {"$set": filtered_user_dict}
+#     )
 
-    # Verificar si la actualización fue exitosa
-    if result.matched_count == 1:
-        # Obtener y retornar el usuario actualizado
-        return await get_user_by_id(user_id)
-    return None
+#     # Verificar si la actualización fue exitosa
+#     if result.matched_count == 1:
+#         # Obtener y retornar el usuario actualizado
+#         return await get_user_by_id(user_id)
+#     return None
 
 # Servicio para mostrar los eventos en los que participa un usuario
 async def get_user_participating_events(user_id: str) -> List[EventModel]:
@@ -134,6 +134,32 @@ async def register_user(user_data: UserCreate) -> UserRead:
     del user_dict['password']  # No devolver la contraseña
 
     return UserRead(**user_dict)
+
+async def update_user(user_id: str, user_update: UserUpdate, current_user: dict) -> UserRead:
+    
+    # Verificar si el usuario actual es el mismo que se desea actualizar
+    current_user_dict = current_user.model_dump()
+
+    if str(current_user_dict['id']) != user_id:
+        raise HTTPException(status_code=403, detail="Not authorized to update this user")
+
+    user_dict = user_update.model_dump()
+    
+    print(user_dict)
+    filtered_user_dict = {k: v for k, v in user_dict.items() if v not in [None, "", [], {}]}
+
+    if not filtered_user_dict:
+        raise HTTPException(status_code=400, detail="No fields to update")
+
+    result = await db.get_collection("users").update_one(
+        {"_id": ObjectId(user_id)}, {"$set": filtered_user_dict}
+    )
+
+    if result.matched_count == 1:
+        return await get_user_by_id(user_id)
+
+    return None
+
 
 
 

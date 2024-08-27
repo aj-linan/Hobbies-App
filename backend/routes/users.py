@@ -27,24 +27,24 @@ async def list_users():
     return users
 
 # Ruta para obtener un usuario por su ID
-@router.get("/users/{user_id}", response_model=UserRead, tags=["users"])
-async def read_user(user_id: str):
-    # Obtener un usuario por su ID utilizando el servicio de usuarios
-    user = await user_services.get_user_by_id(user_id)
-    if user is None:
-        raise HTTPException(status_code=404, detail="User not found")
-    return user
+# @router.get("/users/{user_id}", response_model=UserRead, tags=["users"])
+# async def read_user(user_id: str):
+#     # Obtener un usuario por su ID utilizando el servicio de usuarios
+#     user = await user_services.get_user_by_id(user_id)
+#     if user is None:
+#         raise HTTPException(status_code=404, detail="User not found")
+#     return user
 
 ### Eventos
 
 # Ruta para actualizar un usuario por su ID
-@router.put("/users/{user_id}", response_model=UserRead, tags=["users"])
-async def update_user(user_id: str, user: UserUpdate):
-    # Actualizar un usuario existente utilizando el servicio de usuarios
-    updated_user = await user_services.update_user(user_id, user)
-    if updated_user is None:
-        raise HTTPException(status_code=404, detail="User not found")
-    return updated_user
+# @router.put("/users/{user_id}", response_model=UserRead, tags=["users"])
+# async def update_user(user_id: str, user: UserUpdate):
+#     # Actualizar un usuario existente utilizando el servicio de usuarios
+#     updated_user = await user_services.update_user(user_id, user)
+#     if updated_user is None:
+#         raise HTTPException(status_code=404, detail="User not found")
+#     return updated_user
 
 # Ruta para ver eventos en los que participa un usuario
 @router.get("/users/{userId}/participating_events", response_model=List[EventModel],tags=["events"])
@@ -96,6 +96,8 @@ async def remove_user_from_group(groupId: str, userId: str):
     group = await group_services.remove_user_from_group(groupId, userId)
     return group
 
+### Atentication
+
 @router.post("/register", response_model=UserRead, status_code=status.HTTP_201_CREATED, tags=["authentication"])
 async def register(user: UserCreate):
     return await user_services.register_user(user)
@@ -111,8 +113,11 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends()):
         )
     output = auth_services.format_token(user)
 
-    print(output)
     return output
+
+@router.put("/users/{user_id}", response_model=UserRead)
+async def update_user_route(user_id: str, user_update: UserUpdate, current_user: dict = Depends(auth_services.get_current_user)):
+    return await user_services.update_user(user_id, user_update, current_user)
 
 
 
