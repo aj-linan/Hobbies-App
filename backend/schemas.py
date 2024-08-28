@@ -1,7 +1,7 @@
 from pydantic import BaseModel, Field, EmailStr
 from typing import List, Optional
 from bson import ObjectId
-from datetime import datetime, timezone
+from datetime import datetime
 
 # Campo personalizado para ObjectId
 class PyObjectId(ObjectId):
@@ -24,7 +24,7 @@ class UserRead(BaseModel):
     birthdate:Optional[datetime] = None
     interests: List[str] = Field(default_factory=list)
     location: Optional[str] = None
-    verified: bool
+    verified: bool = False
     groups: Optional[List[str]] = Field(default_factory=list)  # Convertimos ObjectId a str
     created_groups: Optional[List[str]] = Field(default_factory=list) 
     created_events: Optional[List[str]] = Field(default_factory=list)  # Convertimos ObjectId a str
@@ -41,6 +41,7 @@ class UserCreate(BaseModel):
     interests: Optional[List[str]] = Field(default_factory=list)
     location: Optional[str] = None
     verified: bool = False
+
 
 # Esquema para actualizar un usuario
 class UserUpdate(BaseModel):
@@ -60,6 +61,7 @@ class EventRead(BaseModel):
     date: str
     max_participants: int
     created_at: datetime
+    updated_at: datetime
 
 # Esquema para crear un evento
 class EventCreate(BaseModel):
@@ -71,11 +73,11 @@ class EventCreate(BaseModel):
 # Esquema para actualizar un evento
 class EventUpdate(BaseModel):
     title: Optional[str] = None
-    description: Optional[str]
+    description: Optional[str] = None
     date: Optional[str] = None
     max_participants: Optional[int] = None
-    participants: Optional[List[str]] = None
-    updated_at: datetime = None
+    participants: Optional[List[str]] = Field(default_factory=list)
+    updated_at: Optional[datetime] = None
 
     @classmethod
     def from_db(cls, db_data: dict) -> 'EventUpdate':
@@ -94,7 +96,8 @@ class GroupRead(BaseModel):
     id: str = Field(default_factory=str)  # Convertimos ObjectId a str
     name: str
     description: str
-    is_private: bool
+    is_private: bool = False
+    creator_id: str
     members: List[str] = Field(default_factory=list)  # Convertimos ObjectId a str
     interests: List[str] = Field(default_factory=list)
     created_at: datetime
@@ -112,8 +115,8 @@ class GroupCreate(BaseModel):
 class GroupUpdate(BaseModel):
     name: Optional[str] = None
     description: Optional[str] = None
-    members: Optional[List[str]] = None
-    interests: Optional[List[str]] = None
+    members: Optional[List[str]] = Field(default_factory=list)
+    interests: Optional[List[str]] = Field(default_factory=list)
     updated_at: datetime = None
 
     @classmethod

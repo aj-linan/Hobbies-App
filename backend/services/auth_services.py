@@ -2,7 +2,7 @@ from jose import jwt, JWTError
 from datetime import datetime, timedelta, timezone
 from fastapi.security import OAuth2PasswordBearer
 from services import user_services
-from fastapi import HTTPException, status, Depends, Security
+from fastapi import HTTPException, status, Security
 from database import db
 import bcrypt
 import os
