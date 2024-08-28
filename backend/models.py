@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, EmailStr
 from typing import List, Optional
 from datetime import datetime, timezone
 from bson import ObjectId
@@ -7,11 +7,11 @@ from bson import ObjectId
 class UserModel(BaseModel):
 
     id: str
-    email: str
+    email: EmailStr
     password: str
     first_name: Optional[str] = None
     last_name: Optional[str] = None
-    birthdate:Optional[datetime] = None
+    birthdate:Optional[datetime] = Field(default_factory=datetime)
     interests: Optional[List[str]] = Field(default_factory=list)
     location: Optional[str] = None
     profile_visibility: bool = True
@@ -20,7 +20,6 @@ class UserModel(BaseModel):
     created_events: Optional[List[str]] = Field(default_factory=list)  # Lista de IDs de eventos creados por el usuario
     created_groups: Optional[List[str]] = Field(default_factory=list)  # Lista de IDs de eventos creados por el usuario
     participating_events: Optional[List[str]] = Field(default_factory=list)  # Lista de IDs de eventos en los que participa el usuario
-    participating_groups: Optional[List[str]] = Field(default_factory=list)  # Lista de IDs de eventos en los que participa el usuario
     created_at: datetime  # Fecha de creación del usuario
 
     @classmethod
@@ -31,7 +30,6 @@ class UserModel(BaseModel):
         data['created_events'] = [str(e) for e in data.get('created_events', [])]
         data['created_groups'] = [str(e) for e in data.get('created_groups', [])]
         data['participating_events'] = [str(e) for e in data.get('participating_events', [])]
-        data['groups'] = [str(e) for e in data.get('groups', [])]
 
         return cls(**data)
 
@@ -42,8 +40,7 @@ class UserModel(BaseModel):
             "groups": [ObjectId(g) for g in self.groups],
             "created_events": [ObjectId(e) for e in self.created_events],
             "created_groups": [ObjectId(e) for e in self.created_groups],
-            "participating_events": [ObjectId(e) for e in self.participating_events],
-            "groups": [ObjectId(e) for e in self.groups]
+            "participating_events": [ObjectId(e) for e in self.participating_events]
         }
         return db_data
     
@@ -86,7 +83,7 @@ class GroupModel(BaseModel):
     creator_id: str
     members: Optional[List[str]] = Field(default_factory=list)  # Lista de IDs de miembros del grupo
     interests: Optional[List[str]] = Field(default_factory=list)  # Lista de intereses del grupo
-    created_at: datetime # Fecha de creación del grupo
+    created_at: Optional[datetime] # Fecha de creación del grupo
     updated_at: Optional[datetime] = None  # Fecha de última actualización del evento
     max_participants: Optional[int] = 10
 
