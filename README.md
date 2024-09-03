@@ -35,5 +35,6 @@ This backend application is built using FastAPI and MongoDB. It is designed to m
 Access the interactive API documentation at:
 
 Swagger UI: http://127.0.0.1:8000/docs
+
 ReDoc: http://127.0.0.1:8000/redoc
 
